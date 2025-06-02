@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import axios from '../../axiosConfig';
 
 interface NewsItem {
   id: number;
@@ -17,23 +17,10 @@ const NewsPage: React.FC = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await fetch("http://localhost:5000/news", {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-
-        const contentType = res.headers.get("content-type");
-        if (!res.ok || !contentType?.includes("application/json")) {
-          const text = await res.text();
-          throw new Error(`Invalid response: ${text}`);
-        }
-
-        const data = await res.json();
-        setNews(data);
+        const res = await axios.get('/news');
+        setNews(res.data);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.response?.data?.error || err.message || 'An error occurred.');
       } finally {
         setLoading(false);
       }
@@ -55,7 +42,9 @@ const NewsPage: React.FC = () => {
           {news.map((item) => (
             <div key={item.id} className="bg-white shadow rounded p-4 border">
               <h2 className="text-xl font-semibold mb-1">{item.title}</h2>
-              <p className="text-gray-600 text-sm mb-2">Posted on {new Date(item.created_at).toLocaleString()}</p>
+              <p className="text-gray-600 text-sm mb-2">
+                Posted on {new Date(item.created_at).toLocaleString()}
+              </p>
               <p>{item.content}</p>
             </div>
           ))}

@@ -1,4 +1,3 @@
-// ✅ Refactored Home.tsx to use axios + fixed placeholder keys
 import { useEffect, useState } from "react";
 import AnimeCard from '../components/AnimeCard';
 import axios from '../../axiosConfig';

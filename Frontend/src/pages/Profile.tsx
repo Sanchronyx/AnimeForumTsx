@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from '../../axiosConfig';
 
 interface Anime {
   id: number;
@@ -35,16 +36,15 @@ const Profile: React.FC<ProfileProps> = ({ username: propUsername, profileData, 
 
   useEffect(() => {
     if (!profile && username) {
-      fetch(`/api/profile/${username}`, { credentials: 'include' })
-        .then(res => {
-          if (res.status === 401) {
+      axios.get(`/api/profile/${username}`)
+        .then(res => setProfile(res.data))
+        .catch(err => {
+          if (err.response?.status === 401) {
             window.location.href = '/login';
-            return null;
+          } else {
+            console.error("Error fetching profile:", err);
           }
-          return res.json();
-        })
-        .then(data => data && setProfile(data))
-        .catch(console.error);
+        });
     }
   }, [username, profile]);
 

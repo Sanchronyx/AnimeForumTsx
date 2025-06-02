@@ -1,8 +1,7 @@
-// ✅ ForumPage.tsx (fixed API endpoint paths)
-
 import React, { useEffect, useState } from 'react';
 import axios from '../../../axiosConfig';
 import { Link, useLocation } from 'react-router-dom';
+
 
 interface Post {
   id: number;

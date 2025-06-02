@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
+import axios from '../../axiosConfig';
 
 interface AnimeItem {
   id: number;
@@ -8,13 +9,12 @@ interface AnimeItem {
   image_url: string;
   score: number;
   episodes: number;
-  status: string; // ✅ was: string | undefined
+  status: string;
   year?: number;
   genres?: string;
   studios?: string;
   type?: string;
 }
-
 
 export default function BrowseAnime() {
   const [anime, setAnime] = useState<AnimeItem[]>([]);
@@ -29,12 +29,18 @@ export default function BrowseAnime() {
   const status = searchParams.get('status') || '';
 
   useEffect(() => {
-    fetch(`/api/anime/browse?page=${page}&title=${title}&genre=${genre}&type=${type}&status=${status}`)
-      .then(res => res.json())
-      .then(data => {
-        setAnime(data.anime);
-        setTotalPages(data.total_pages);
-      });
+    const fetchAnime = async () => {
+      try {
+        const res = await axios.get('/api/anime/browse', {
+          params: { page, title, genre, type, status }
+        });
+        setAnime(res.data.anime);
+        setTotalPages(res.data.total_pages);
+      } catch (error) {
+        console.error("Failed to fetch anime list:", error);
+      }
+    };
+    fetchAnime();
   }, [searchParams]);
 
   const handleFilterChange = (key: string, value: string) => {

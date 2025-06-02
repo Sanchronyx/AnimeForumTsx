@@ -4,9 +4,9 @@ services:
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn run:app"  # or whatever your entry point is
+    startCommand: "gunicorn run:app" 
     envVars:
       - key: DATABASE_URL
-        value: YOUR_POSTGRES_URL   # from Railway/ElephantSQL/etc.
+        value: postgresql://postgres:admin@localhost/anime
       - key: SECRET_KEY
-        value: your-super-secret-key
+        value: 6d0f3238e39a644d369b8cc399676c6fca4aabe5d97dcfcc912c0224a4663663

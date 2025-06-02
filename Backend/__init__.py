@@ -43,7 +43,9 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
-    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+    # CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+    CORS(app, supports_credentials=True, origins=[
+    "https://anime-forum-tsx-wrrp-b0oe79tdx-levans-projects-c3e8f329.vercel.app"])
 
     from .routes.debug import debug_bp
     app.register_blueprint(debug_bp)

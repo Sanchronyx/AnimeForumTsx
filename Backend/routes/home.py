@@ -1,4 +1,3 @@
-# ✅ Filter out anime with no valid MAL score before sorting
 from flask import Blueprint, jsonify
 from Backend.models import Anime, Review, Post, UserCollection, User
 from Backend.extensions import db

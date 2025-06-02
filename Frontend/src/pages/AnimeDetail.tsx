@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewCard from '../components/ReviewCard';
+import axios from '../../axiosConfig';
 
 interface AnimeDetailData {
   id: number;
@@ -40,18 +41,16 @@ export default function AnimeDetail() {
   const reviewsPerPage = 5;
 
   useEffect(() => {
-    fetch(`/auth/whoami`, { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => setCurrentUser(data.username || ''));
+    axios.get('/auth/whoami')
+      .then(res => setCurrentUser(res.data.username || ''));
 
-    fetch(`/api/anime/${id}`)
-      .then(res => res.json())
-      .then(setAnime)
+    axios.get(`/api/anime/${id}`)
+      .then(res => setAnime(res.data))
       .catch(console.error);
 
-    fetch(`/api/review/anime/${id}`)
-      .then(res => res.json())
-      .then(data => {
+    axios.get(`/api/review/anime/${id}`)
+      .then(res => {
+        const data = res.data;
         setAllReviews(data.reviews);
         setAverageRating(data.average_rating);
         if (data.user_review) {
@@ -70,50 +69,38 @@ export default function AnimeDetail() {
 
     setIsSubmitting(true);
 
-    fetch('/api/review', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        anime_id: anime.id,
-        rating: reviewScore,
-        text: reviewText.trim()
+    axios.post('/api/review', {
+      anime_id: anime.id,
+      rating: reviewScore,
+      text: reviewText.trim()
+    }, { withCredentials: true })
+      .then(res => {
+        alert(res.data.message);
+        return axios.get(`/api/review/anime/${anime.id}`);
       })
-    })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message);
-      return fetch(`/api/reviews/${anime.id}`)
-        .then(res => res.json())
-        .then(data => {
-          setAllReviews(data.reviews);
-          setAverageRating(data.average_rating);
-          if (data.user_review) {
-            setReviewText(data.user_review.text);
-            setReviewScore(data.user_review.rating);
-          }
-        });
-    })
-    .catch(err => {
-      console.error("Review submission failed:", err);
-      alert("Failed to submit review.");
-    })
-    .then(() => setIsSubmitting(false));
+      .then(res => {
+        const data = res.data;
+        setAllReviews(data.reviews);
+        setAverageRating(data.average_rating);
+        if (data.user_review) {
+          setReviewText(data.user_review.text);
+          setReviewScore(data.user_review.rating);
+        }
+      })
+      .catch(err => {
+        console.error("Review submission failed:", err);
+        alert("Failed to submit review.");
+      })
+      .then(() => setIsSubmitting(false));
   };
 
   const handleReportReview = (reviewId: number) => {
-    fetch('/api/report/review', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ review_id: reviewId })
-    })
-    .then(res => res.json())
-    .then(data => alert(data.message || data.error))
-    .catch(err => {
-      console.error("Failed to report review:", err);
-      alert("Could not report review.");
-    });
+    axios.post('/api/report/review', { review_id: reviewId }, { withCredentials: true })
+      .then(res => alert(res.data.message || res.data.error))
+      .catch(err => {
+        console.error("Failed to report review:", err);
+        alert("Could not report review.");
+      });
   };
 
   const sortedReviews = [...allReviews].sort((a, b) => {

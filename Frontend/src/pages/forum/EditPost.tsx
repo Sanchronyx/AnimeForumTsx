@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../../axiosConfig';
 
 const EditPost: React.FC = () => {
   const { postId } = useParams();
@@ -10,7 +10,7 @@ const EditPost: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('/forum/posts')
+    axios.get('/api/forum/posts')
       .then(res => {
         const post = res.data.find((p: any) => p.id === parseInt(postId || ''));
         if (post) {
@@ -24,7 +24,7 @@ const EditPost: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.put(`/forum/posts/${postId}`, { content });
+      await axios.put(`/api/forum/posts/${postId}`, { content });
       navigate('/forum');
     } catch (err) {
       setError('Error updating post.');

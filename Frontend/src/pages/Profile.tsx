@@ -1,3 +1,5 @@
+// ✅ Profile.tsx fixed to dynamically show new collections
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,25 +30,27 @@ const Profile: React.FC<ProfileProps> = ({ username: propUsername, profileData, 
   const routeParams = useParams<{ username: string }>();
   const username = propUsername || routeParams.username;
 
-  const [profile, setProfile] = useState<ProfileData | null>(profileData || null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [activeTab, setActiveTab] = useState<'collections' | 'ratings' | 'reviews' | 'posts'>('collections');
   const [reviewSort, setReviewSort] = useState<'newest' | 'highest'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 5;
 
+  const fetchProfile = () => {
+    axios.get(`/api/profile/${username}`)
+      .then(res => setProfile(res.data))
+      .catch(err => {
+        if (err.response?.status === 401) {
+          window.location.href = '/login';
+        } else {
+          console.error("Error fetching profile:", err);
+        }
+      });
+  };
+
   useEffect(() => {
-    if (!profile && username) {
-      axios.get(`/api/profile/${username}`)
-        .then(res => setProfile(res.data))
-        .catch(err => {
-          if (err.response?.status === 401) {
-            window.location.href = '/login';
-          } else {
-            console.error("Error fetching profile:", err);
-          }
-        });
-    }
-  }, [username, profile]);
+    fetchProfile();
+  }, [username]);
 
   if (!profile) return <div className="text-center mt-10">Loading profile...</div>;
 
@@ -57,6 +61,8 @@ const Profile: React.FC<ProfileProps> = ({ username: propUsername, profileData, 
 
   const paginatedReviews = sortedReviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage);
   const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
+
+  const sortedCollectionKeys = Object.keys(profile.collections).sort();
 
   return (
     <div className="max-w-6xl mx-auto mt-8 p-6 bg-white shadow rounded-xl">
@@ -90,12 +96,12 @@ const Profile: React.FC<ProfileProps> = ({ username: propUsername, profileData, 
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            {Object.entries(profile.collections).map(([key, list]) => (
-              list.length > 0 && (
+            {sortedCollectionKeys.map((key) => (
+              profile.collections[key].length > 0 && (
                 <div key={key}>
                   <h3 className="capitalize font-semibold text-lg text-gray-700 mb-2">{key}</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {list.map((anime) => (
+                    {profile.collections[key].map((anime) => (
                       <div
                         key={anime.id}
                         className="bg-gray-50 hover:bg-gray-100 p-2 rounded-lg shadow transition duration-200"

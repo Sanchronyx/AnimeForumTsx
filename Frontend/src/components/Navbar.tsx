@@ -2,37 +2,65 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import NotificationsDropdown from './NotificationsDropdown';
 import { User } from 'lucide-react';
+import axios from '../../axiosConfig';
 
 interface NavbarProps {
   user: any;
-  onLogout?: () => void;
+  setUser: (user: any) => void;
   onLoginClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onLoginClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ user, setUser, onLoginClick }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [topic, setTopic] = useState('');
   const [message, setMessage] = useState('');
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const handleClickOutside = (e: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-      setDropdownOpen(false);
-    }
-  };
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
-    if (dropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+    if (searchTerm.trim()) {
+      axios.get(`/api/search/anime?query=${searchTerm}`)
+        .then(res => {
+          setSearchResults(res.data);
+          setShowDropdown(true);
+        })
+        .catch(() => setSearchResults([]));
     } else {
-      document.removeEventListener('mousedown', handleClickOutside);
+      setShowDropdown(false);
+      setSearchResults([]);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dropdownOpen]);
+  }, [searchTerm]);
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('/auth/logout', {}, { withCredentials: true });
+      setUser(null);
+      navigate('/');
+    } catch (err) {
+      console.error('Logout failed', err);
+    }
+  };
 
   const handleProfileClick = () => {
     navigate(`/profile/${user.username}`);
@@ -72,18 +100,38 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onLoginClick }) => {
         <Link to="/forum" className="hover:underline">Forums</Link>
         <Link to="/news" className="hover:underline">News</Link>
         <Link to="/friends/requests" className="hover:underline">Friend Requests</Link>
-
         {user?.is_admin && (
           <Link to="/admin/dashboard" className="hover:underline text-yellow-400">Admin Tools</Link>
         )}
       </div>
 
-      <div className="flex items-center space-x-4 relative">
-        <input
-          type="text"
-          placeholder="Search anime..."
-          className="px-2 py-1 rounded text-black"
-        />
+      <div className="flex items-center space-x-4 relative" ref={searchRef}>
+        <div className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search anime..."
+            className="px-4 py-2 rounded text-black w-64"
+          />
+          {showDropdown && searchResults.length > 0 && (
+            <div className="absolute z-50 bg-white text-black w-full mt-1 rounded shadow">
+              {searchResults.map((anime, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    navigate(`/anime/${anime.id}`);
+                    setSearchTerm('');
+                    setShowDropdown(false);
+                  }}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  {anime.title}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {user && (
           <Link to="/friends" className="hover:text-blue-300">
@@ -129,7 +177,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onLoginClick }) => {
                     Send Feedback
                   </button>
                   <button
-                    onClick={onLogout}
+                    onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
                   >
                     Logout
@@ -139,8 +187,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onLoginClick }) => {
             </div>
           </>
         )}
-
-        <button className="ml-2 hover:underline">Toggle Theme</button>
 
         {feedbackOpen && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">

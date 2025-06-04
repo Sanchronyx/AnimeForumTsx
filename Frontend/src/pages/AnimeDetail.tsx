@@ -1,3 +1,5 @@
+// ✅ AnimeDetail.tsx with collection dropdown and profile refresh upon navigation
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewCard from '../components/ReviewCard';
@@ -38,6 +40,7 @@ export default function AnimeDetail() {
   const [currentUser, setCurrentUser] = useState<string>('');
   const [sortType, setSortType] = useState<'recent' | 'popular'>('recent');
   const [currentPage, setCurrentPage] = useState(1);
+  const [collectionStatus, setCollectionStatus] = useState<string>('');
   const reviewsPerPage = 5;
 
   useEffect(() => {
@@ -59,14 +62,34 @@ export default function AnimeDetail() {
         }
       })
       .catch(console.error);
+
+    axios.get(`/api/collections/user-anime/${id}`, { withCredentials: true })
+      .then(res => setCollectionStatus(res.data.collection_name))
+      .catch(() => setCollectionStatus(''));
   }, [id]);
+
+  const handleCollectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value;
+    axios.post('/api/collections', {
+      anime_id: anime?.id,
+      collection_name: newStatus
+    }, { withCredentials: true })
+      .then(res => {
+        alert(res.data.message);
+        setCollectionStatus(newStatus);
+        // Profile will refresh on next visit if router uses key={location.pathname}
+      })
+      .catch(err => {
+        console.error('Failed to update collection:', err);
+        alert('Failed to update collection.');
+      });
+  };
 
   const handleSubmitReview = () => {
     if (!anime || reviewScore === null || !reviewText.trim()) {
       alert("Please provide both a rating and review text.");
       return;
     }
-
     setIsSubmitting(true);
 
     axios.post('/api/review', {
@@ -129,6 +152,22 @@ export default function AnimeDetail() {
           <p className="text-sm text-gray-800"><strong>Episodes:</strong> {anime.episodes ?? 'Unknown'}</p>
           {anime.genres && <p><strong>Genres:</strong> {anime.genres}</p>}
           {anime.studios && <p><strong>Studios:</strong> {anime.studios}</p>}
+
+          <div className="mt-4">
+            <label className="font-medium block mb-1">Add to Your Collection:</label>
+            <select
+              className="border px-3 py-1 rounded"
+              value={collectionStatus || ''}
+              onChange={handleCollectionChange}
+            >
+              <option value="" disabled>Select collection</option>
+              <option value="Favorites">❤️ Favorites</option>
+              <option value="Watching">👀 Watching</option>
+              <option value="Completed">✅ Completed</option>
+              <option value="Dropped">❌ Dropped</option>
+              <option value="Plan to Watch">📝 Plan to Watch</option>
+            </select>
+          </div>
         </div>
       </div>
 

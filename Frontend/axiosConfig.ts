@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000', // ✅ Match browser domain for cookies to work
+  baseURL:'http://localhost:5000', // ✅ Match browser domain for cookies to work
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -11,3 +11,5 @@ const axiosInstance = axios.create({
 });
 
 export default axiosInstance;
+
+// import.meta.env.VITE_BACKEND_URL ||

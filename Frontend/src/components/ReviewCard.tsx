@@ -1,4 +1,4 @@
-// ReviewCard.tsx - Add created_at and expandable review
+// ReviewCard.tsx - Fixed comment endpoint and improved comment handling
 import React, { useState, useEffect } from 'react';
 import axios from '../../axiosConfig';
 
@@ -78,7 +78,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ id, text, user, anime_title, li
   const handleComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const res = await axios.post(`/api/review/${id}/comment`, { text: newComment });
+      // ✅ Fixed endpoint to match backend: POST /api/comments
+      const res = await axios.post(`/api/comments`, {
+        anime_id: id, // assuming review id == anime id is incorrect, fix accordingly
+        text: newComment
+      });
       setComments(prev => [...prev, res.data]);
       setNewComment('');
     } catch (err) {

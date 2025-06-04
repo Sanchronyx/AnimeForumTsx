@@ -3,15 +3,15 @@ import Navbar from './Navbar';
 
 interface LayoutProps {
   user: any;
-  onLogout?: () => void;
+  setUser: (user: any) => void;
   onLoginClick?: () => void;
   children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ user, onLogout, onLoginClick, children }) => {
+const Layout: React.FC<LayoutProps> = ({ user, setUser, onLoginClick, children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <Navbar user={user} onLogout={onLogout} onLoginClick={onLoginClick} />
+      <Navbar user={user} setUser={setUser} onLoginClick={onLoginClick} />
       <main className="flex-grow p-6">
         {children}
       </main>

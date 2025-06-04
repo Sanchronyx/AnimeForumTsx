@@ -23,7 +23,7 @@ const CreatePost: React.FC = () => {
 
     try {
       await axios.post(
-        '/forum/posts',
+        'api/forum/posts',
         { title, content, tags: selectedTags },
         { withCredentials: true }
       );
